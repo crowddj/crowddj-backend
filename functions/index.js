@@ -5,9 +5,14 @@ admin.initializeApp(functions.config().firebase);
 
 const ascii = /^[ -~]+$/;
 
+function scrubSongName(name) {
+  const pattern = /\s*\(.*\)\s*/g;
+  return name.replace(pattern, ' ').trim().toLowerCase()
+}
+
 function matchesSongMaker(original) {
   return (song) => {
-    return original.name == song.name
+    return scrubSongName(original.name) == scrubSongName(song.name)
   }
 }
 
@@ -43,8 +48,6 @@ exports.addToQueue = functions.https.onRequest((req, res) => {
   const room = req.body.room;
   const songToAdd = req.body.song;
 
-  // Make sure it's not in the queue
-  console.log("lookign at room: " + room);
   admin.database().ref('rooms/' + room).once('value', (data) => {
     const exists = (data.val() !== null);
     if (!exists) {
@@ -60,8 +63,7 @@ exports.addToQueue = functions.https.onRequest((req, res) => {
       const songName = song['name'];
       if (matches(song)) {
         matched = true;
-        // baddddd b/c concurrency
-        item.transaction((item) => {
+        item.ref.transaction((item) => {
           if (item) {
             item.upvoteCount++;
           }
