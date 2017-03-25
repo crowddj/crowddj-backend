@@ -12,7 +12,11 @@ function scrubSongName(name) {
 
 function matchesSongMaker(original) {
   return (song) => {
-    return scrubSongName(original.name) == scrubSongName(song.name)
+    if (song.hasOwnProperty('track-id')) {
+      return song['track-id'] == original['track-id']
+    } else {
+      return scrubSongName(original.name) == scrubSongName(song.name)
+    }
   }
 }
 
